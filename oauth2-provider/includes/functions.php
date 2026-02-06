@@ -366,7 +366,7 @@ function wp_oauth_generate_server_keys( $overwrite = false ) {
 	file_put_contents( $key_dir . '/.htaccess', 'deny from all' );
 	$cert_locs = wpoauth_get_server_certs();
 
-	if ( ! file_exists( $cert_locs['private'] ) || $overwrite ) {
+	if ( $overwrite || ! wpoauth_get_private_server_key() || ! wpoauth_get_public_server_key() ) {
 		$res = openssl_pkey_new(
 			array(
 				'private_key_bits' => 2048,
@@ -374,13 +374,19 @@ function wp_oauth_generate_server_keys( $overwrite = false ) {
 			)
 		);
 		openssl_pkey_export( $res, $privKey );
-		file_put_contents( $cert_locs['private'], $privKey );
+		update_option( 'wpoauth_server_private_key', $privKey, false );
 	}
 
-	if ( ! file_exists( $cert_locs['public'] ) || $overwrite ) {
+	if ( $overwrite || ! wpoauth_get_public_server_key() ) {
 		$pubKey = openssl_pkey_get_details( $res );
 		$pubKey = $pubKey['key'];
+		update_option( 'wpoauth_server_public_key', $pubKey, false );
 		file_put_contents( $cert_locs['public'], $pubKey );
+	}
+
+	// So security, remove the private key file if it exists
+	if ( file_exists( $cert_locs['private'] ) ) {
+		@unlink( $cert_locs['private'] );
 	}
 
 	/*
@@ -400,9 +406,21 @@ function wp_oauth_generate_server_keys( $overwrite = false ) {
  * @since  3.0.5
  */
 function wpoauth_get_private_server_key() {
-	$keys = wpoauth_get_server_certs();
+	$stored_key = get_option( 'wpoauth_server_private_key', '' );
+	if ( ! empty( $stored_key ) ) {
+		return $stored_key;
+	}
 
-	return file_get_contents( $keys['private'] );
+	$keys = wpoauth_get_server_certs();
+	if ( isset( $keys['private'] ) && file_exists( $keys['private'] ) ) {
+		$stored_key = file_get_contents( $keys['private'] );
+		if ( ! empty( $stored_key ) ) {
+			update_option( 'wpoauth_server_private_key', $stored_key, false );
+			return $stored_key;
+		}
+	}
+
+	return '';
 }
 
 /**
@@ -412,9 +430,21 @@ function wpoauth_get_private_server_key() {
  * @since  3.1.0
  */
 function wpoauth_get_public_server_key() {
-	$keys = wpoauth_get_server_certs();
+	$stored_key = get_option( 'wpoauth_server_public_key', '' );
+	if ( ! empty( $stored_key ) ) {
+		return $stored_key;
+	}
 
-	return file_get_contents( $keys['public'] );
+	$keys = wpoauth_get_server_certs();
+	if ( isset( $keys['public'] ) && file_exists( $keys['public'] ) ) {
+		$stored_key = file_get_contents( $keys['public'] );
+		if ( ! empty( $stored_key ) ) {
+			update_option( 'wpoauth_server_public_key', $stored_key, false );
+			return $stored_key;
+		}
+	}
+
+	return '';
 }
 
 /**
@@ -435,8 +465,14 @@ function wpoauth_get_jwt_algorithm() {
  * @return boolean [description]
  */
 function wp_oauth_has_certificates() {
-	$keys = wpoauth_get_server_certs();
+	$private_key = wpoauth_get_private_server_key();
+	$public_key  = wpoauth_get_public_server_key();
 
+	if ( ! empty( $private_key ) && ! empty( $public_key ) ) {
+		return true;
+	}
+
+	$keys = wpoauth_get_server_certs();
 	if ( is_array( $keys ) ) {
 		foreach ( $keys as $key ) {
 			if ( ! file_exists( $key ) ) {
@@ -445,36 +481,39 @@ function wp_oauth_has_certificates() {
 		}
 
 		return true;
-	} else {
-
-		return false;
 	}
+
+	return false;
 }
 
 /**
  * Returns the file sizes of the certificates in an array for display in the admin
  **/
 function wpoauth_get_cetificate_filesizes() {
-	if ( wp_oauth_has_certificates() ) {
-		$keys = wpoauth_get_server_certs();
-
-		$public_file_size = filesize( $keys['public'] );
-		$private_file_size = filesize( $keys['private'] );
-		$array_return = array(
-			'public' => array(
-				'size' => $public_file_size,
-				'modified' => date_i18n( 'F d, Y H:i:s', filemtime( $keys['public'] ), true ),
-			),
-			'private' => array(
-				'size' => $private_file_size,
-				'modified' => date_i18n( 'F d, Y H:i:s', filemtime( $keys['private'] ), true ),
-			),
-		);
-
-		return $array_return;
+	if ( ! wp_oauth_has_certificates() ) {
+		return false;
 	}
 
-	return false;
+	$keys = wpoauth_get_server_certs();
+	$public_key = wpoauth_get_public_server_key();
+	$private_key = wpoauth_get_private_server_key();
+	$activation_time = (int) get_option( 'wp_oauth_activation_time', time() );
+
+	$public_file_size = isset( $keys['public'] ) && file_exists( $keys['public'] ) ? filesize( $keys['public'] ) : strlen( $public_key );
+	$private_file_size = isset( $keys['private'] ) && file_exists( $keys['private'] ) ? filesize( $keys['private'] ) : strlen( $private_key );
+	$public_modified = isset( $keys['public'] ) && file_exists( $keys['public'] ) ? filemtime( $keys['public'] ) : $activation_time;
+	$private_modified = isset( $keys['private'] ) && file_exists( $keys['private'] ) ? filemtime( $keys['private'] ) : $activation_time;
+
+	return array(
+		'public' => array(
+			'size' => $public_file_size,
+			'modified' => date_i18n( 'F d, Y H:i:s', $public_modified, true ),
+		),
+		'private' => array(
+			'size' => $private_file_size,
+			'modified' => date_i18n( 'F d, Y H:i:s', $private_modified, true ),
+		),
+	);
 }
 
 /**

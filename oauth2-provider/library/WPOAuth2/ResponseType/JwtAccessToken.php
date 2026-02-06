@@ -120,12 +120,10 @@ class JwtAccessToken extends AccessToken {
 	protected function encodeToken( array $token, $client_id = null ) {
 
 		// For the time being we are only handling 1 key for all
-		$keys = wpoauth_get_server_certs();
-
 		// $public_key = openssl_pkey_get_public( file_get_contents( $keys['public'] ) );
 		// $public_key = openssl_pkey_get_details( $public_key );
 
-		$private_key = file_get_contents( $keys['private'] );
+		$private_key = wpoauth_get_private_server_key();
 		$algorithm   = 'RS256';
 
 		// $private_key = $this->publicKeyStorage->getPrivateKey( $client_id );

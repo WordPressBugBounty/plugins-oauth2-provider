@@ -289,8 +289,8 @@ if ( 'authorize' == $method ) {
  * @link https://tools.ietf.org/html/rfc7517
  */
 if ( 'keys' == $well_known ) {
-	$keys = wpoauth_get_server_certs();
-	$public_key = openssl_pkey_get_public( file_get_contents( $keys['public'] ) );
+	$public_key_pem = wpoauth_get_public_server_key();
+	$public_key = openssl_pkey_get_public( $public_key_pem );
 	$public_key = openssl_pkey_get_details( $public_key );
 	$response = new WPOAuth2\Response(
 		array(

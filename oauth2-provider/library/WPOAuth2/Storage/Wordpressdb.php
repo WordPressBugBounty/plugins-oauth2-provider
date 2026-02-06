@@ -824,8 +824,12 @@ class Wordpressdb implements
 		$stmt = $this->db->prepare( "SELECT public_key FROM {$this->db->prefix}oauth_public_keys WHERE client_id=%s OR client_id IS NULL ORDER BY client_id IS NOT NULL DESC", array( $client_id ) );
 		$stmt = $this->db->get_row( $stmt, ARRAY_A );
 
-		if ( null != $stmt ) {
+		if ( null != $stmt && ! empty( $stmt['public_key'] ) ) {
 			return $stmt['public_key'];
+		}
+
+		if ( function_exists( 'wpoauth_get_public_server_key' ) ) {
+			return wpoauth_get_public_server_key();
 		}
 	}
 
@@ -840,8 +844,12 @@ class Wordpressdb implements
 		$stmt = $this->db->prepare( "SELECT private_key FROM {$this->db->prefix}oauth_public_keys WHERE client_id=%s OR client_id IS NULL ORDER BY client_id IS NOT NULL DESC", array( $client_id ) );
 		$stmt = $this->db->get_row( $stmt, ARRAY_A );
 
-		if ( null != $stmt ) {
+		if ( null != $stmt && ! empty( $stmt['private_key'] ) ) {
 			return $stmt['private_key'];
+		}
+
+		if ( function_exists( 'wpoauth_get_private_server_key' ) ) {
+			return wpoauth_get_private_server_key();
 		}
 	}
 

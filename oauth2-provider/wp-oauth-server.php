@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP OAuth Server - CE
  * Plugin URI: http://wp-oauth.com
- * Version: 4.4.0
+ * Version: 4.5.0
  * Description: Full OAuth2 Server for WordPress. User Authorization Management Systems For WordPress.
  * Author: WP OAuth Server
  * Author URI: http://wp-oauth.com
@@ -18,7 +18,7 @@ if ( ! defined( 'WPOAUTH_FILE' ) ) {
 }
 
 if ( ! defined( 'WPOAUTH_VERSION' ) ) {
-	define( 'WPOAUTH_VERSION', '4.4.0' );
+	define( 'WPOAUTH_VERSION', '4.5.0' );
 }
 
 // localize
@@ -61,6 +61,89 @@ function wpoauth_server_register_files( $suffix ) {
 }
 
 add_action( 'admin_enqueue_scripts', 'wpoauth_server_register_files' );
+
+/**
+ * Admin notice: Permalinks should be enabled.
+ */
+add_action( 'admin_notices', 'wpoauth_permalink_notice' );
+add_action( 'admin_post_wpoauth_dismiss_permalink_notice', 'wpoauth_handle_permalink_notice_action' );
+add_action( 'admin_post_wpoauth_remind_permalink_notice', 'wpoauth_handle_permalink_notice_action' );
+add_action( 'update_option_permalink_structure', 'wpoauth_reset_permalink_notice_state', 10, 2 );
+
+function wpoauth_handle_permalink_notice_action() {
+	if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	if ( empty( $_GET['_wpnonce'] ) ) {
+		return;
+	}
+
+	if ( ! wp_verify_nonce( sanitize_text_field( $_GET['_wpnonce'] ), 'wo_permalink_notice_action' ) ) {
+		return;
+	}
+
+	$action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : '';
+	if ( 'wpoauth_remind_permalink_notice' === $action ) {
+		update_user_meta( get_current_user_id(), 'wo_permalink_notice_snooze_until', time() + ( 30 * DAY_IN_SECONDS ) );
+	} elseif ( 'wpoauth_dismiss_permalink_notice' === $action ) {
+		update_user_meta( get_current_user_id(), 'wo_dismiss_permalink_notice', 1 );
+	}
+
+	$redirect = wp_get_referer();
+	if ( ! $redirect ) {
+		$redirect = admin_url();
+	}
+	wp_safe_redirect( $redirect );
+	exit;
+}
+
+/**
+ * Reset notice history when permalinks change.
+ */
+function wpoauth_reset_permalink_notice_state( $old_value, $value ) {
+	if ( $old_value === $value ) {
+		return;
+	}
+
+	delete_metadata( 'user', 0, 'wo_dismiss_permalink_notice', '', true );
+	delete_metadata( 'user', 0, 'wo_permalink_notice_snooze_until', '', true );
+}
+
+function wpoauth_permalink_notice() {
+	if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	if ( get_option( 'permalink_structure' ) ) {
+		return;
+	}
+
+	if ( get_user_meta( get_current_user_id(), 'wo_dismiss_permalink_notice', true ) ) {
+		return;
+	}
+
+	$snooze_until = (int) get_user_meta( get_current_user_id(), 'wo_permalink_notice_snooze_until', true );
+	if ( $snooze_until && time() < $snooze_until ) {
+		return;
+	}
+
+	$permalinks_url = admin_url( 'options-permalink.php' );
+	$action_base = admin_url( 'admin-post.php' );
+	$dismiss_url = wp_nonce_url( add_query_arg( 'action', 'wpoauth_dismiss_permalink_notice', $action_base ), 'wo_permalink_notice_action' );
+	$remind_url = wp_nonce_url( add_query_arg( 'action', 'wpoauth_remind_permalink_notice', $action_base ), 'wo_permalink_notice_action' );
+
+	echo '<div class="notice notice-warning is-dismissible">';
+	echo '<p>';
+	echo esc_html__( 'WP OAuth Server recommends enabling pretty permalinks for OAuth endpoints to work as expected.', 'wp-oauth' ) . ' ';
+	echo '<a href="' . esc_url( $permalinks_url ) . '">' . esc_html__( 'Open Permalink Settings', 'wp-oauth' ) . '</a>.';
+	echo '</p>';
+	echo '<p>';
+	echo '<a class="button" href="' . esc_url( $remind_url ) . '">' . esc_html__( 'Remind me in 30 days', 'wp-oauth' ) . '</a> ';
+	echo '<a class="button-link" href="' . esc_url( $dismiss_url ) . '">' . esc_html__( 'Dismiss', 'wp-oauth' ) . '</a>';
+	echo '</p>';
+	echo '</div>';
+}
 
 require_once dirname( __FILE__ ) . '/includes/functions.php';
 require_once dirname( __FILE__ ) . '/includes/cron.php';

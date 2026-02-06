@@ -4,9 +4,9 @@ Contributors: justingreerbbi, askjayson
 Donate link: http://justin-greer.com/ 
 Tags: OAuth2 Service, oauth2, OAuth provider, Provider, OAuth, OAuth client, Single Sign On, SSO, OpenID Connect, OIDC, OpenID, Connect
 Requires at least: 4.7.2
-Tested up to: 6.4
+Tested up to: 6.9.0
 Requires PHP: 7.4
-Stable tag: 4.4.0
+Stable tag: 4.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,9 +114,14 @@ For any upgrade or modification, PLEASE PLEASE PLEASE make a full backup of your
 
 == Changelog ==
 
+= 4.5.0 =
+* Security Update: A patch has been added to protect the private key during certain server configurations. Updating is highly recommended.
+* Added a new admin notice for permalink setting recommendations.
+* Updated with WP 6.9 and up to PHP 8.5.0.
+
 = 4.4.0 =
 * (Security Update) Refactored the "destroy" endpoint to remove the auto redirect in favor for a manual checkpoint.
-* Cleaned up misc functions. This should not effect any exsisting implementations.
+* Cleaned up misc functions. This should not effect any existing implementations.
 * Tested with 6.4 installed.
 
 = 4.3.4 =

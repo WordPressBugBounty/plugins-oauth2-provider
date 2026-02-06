@@ -67,7 +67,7 @@ class WO_Server {
 		}
 
 		if ( ! defined( 'wp_oauth_server_db_version' ) ) {
-			define( 'wp_oauth_server_db_version', 44203 );
+			define( 'wp_oauth_server_db_version', 44204 );
 		}
 
 		if ( function_exists( '__autoload' ) ) {
@@ -348,7 +348,7 @@ class WO_Server {
 	/**
 	 * Upgrade method
 	 */
-	public function upgrade() {
+	public static function upgrade() {
 
 		// Fix
 		// https://github.com/justingreerbbi/wp-oauth-server/issues/7
@@ -409,6 +409,33 @@ class WO_Server {
 		$code_challenge_method_column_check = $wpdb->query( "SHOW COLUMNS FROM {$wpdb->prefix}oauth_authorization_codes LIKE 'code_challenge_method'" );
 		if ( $code_challenge_method_column_check != 1 ) {
 			$wpdb->query( "ALTER TABLE {$wpdb->prefix}oauth_authorization_codes ADD `code_challenge_method` VARCHAR( 32 ) AFTER `id_token`" );
+		}
+
+		/*
+		 * Move server keys into the database to avoid filesystem exposure.
+		 *
+		 * @since 4.4.1
+		 */
+		$private_key_option = get_option( 'wpoauth_server_private_key', '' );
+		$public_key_option  = get_option( 'wpoauth_server_public_key', '' );
+		$cert_locations     = wpoauth_get_server_certs();
+
+		if ( empty( $private_key_option ) && isset( $cert_locations['private'] ) && file_exists( $cert_locations['private'] ) ) {
+			$private_key_option = file_get_contents( $cert_locations['private'] );
+			if ( ! empty( $private_key_option ) ) {
+				update_option( 'wpoauth_server_private_key', $private_key_option, false );
+			}
+		}
+
+		if ( empty( $public_key_option ) && isset( $cert_locations['public'] ) && file_exists( $cert_locations['public'] ) ) {
+			$public_key_option = file_get_contents( $cert_locations['public'] );
+			if ( ! empty( $public_key_option ) ) {
+				update_option( 'wpoauth_server_public_key', $public_key_option, false );
+			}
+		}
+
+		if ( isset( $cert_locations['private'] ) && file_exists( $cert_locations['private'] ) ) {
+			@unlink( $cert_locations['private'] );
 		}
 
 		// Update the database version to the current version
