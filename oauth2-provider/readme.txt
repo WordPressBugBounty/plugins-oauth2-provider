@@ -1,12 +1,11 @@
 === WP OAuth Server (OAuth Authentication) ===
 
 Contributors: justingreerbbi, askjayson
-Donate link: http://justin-greer.com/ 
 Tags: OAuth2 Service, oauth2, OAuth provider, Provider, OAuth, OAuth client, Single Sign On, SSO, OpenID Connect, OIDC, OpenID, Connect
 Requires at least: 4.7.2
-Tested up to: 6.9.0
+Tested up to: 7.0.4
 Requires PHP: 7.4
-Stable tag: 4.5.0
+Stable tag: 4.5.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,7 +61,7 @@ https://wp-oauth.com.
 
 = Minimum Requirements =
 
-* PHP 5.6.4 or greater *(latest version recommended)*
+* PHP 7.4 or greater *(latest version recommended)*
 * OpenSSL installed and enabled if you plan on using OpenID Connect
 
 = Other Information =
@@ -113,6 +112,12 @@ For any upgrade or modification, PLEASE PLEASE PLEASE make a full backup of your
 1. Adding a Client
 
 == Changelog ==
+
+= 4.5.1 =
+* Security Update: Scoped the revoke-token AJAX nonce to a named action so a generic default-action nonce cannot be reused. Updating is recommended.
+* Fixed Generate/Regenerate Token nonce fields on the user profile so those actions submit a valid nonce.
+* Fixed a PHP warning on the Server Status page caused by cURL returning array values such as feature_list.
+* Tested with WordPress 7.0.4.
 
 = 4.5.0 =
 * Security Update: A patch has been added to protect the private key during certain server configurations. Updating is highly recommended.

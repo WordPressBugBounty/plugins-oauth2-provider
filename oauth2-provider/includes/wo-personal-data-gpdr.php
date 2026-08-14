@@ -6,7 +6,7 @@
  * Personal Data Eraser that taps into WP's data removal
  *
  * @link   https://developer.wordpress.org/plugins/privacy/adding-the-personal-data-eraser-to-your-plugin/
- * @author Justin Greer <justin@justin-greer.com>
+ * @author Justin Greer <justingreer750@gmail.com>
  */
 
 /**

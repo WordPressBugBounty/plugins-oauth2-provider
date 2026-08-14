@@ -2,7 +2,7 @@
 /**
  * Custom WP Table for clients
  *
- * @author  Justin Greer <justin@justin-greer.com>
+ * @author  Justin Greer <justingreer750@gmail.com>
  * @package WP OAuth Server
  */
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );

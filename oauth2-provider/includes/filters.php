@@ -4,7 +4,7 @@
  *
  * This file should contain all the filters used throughout the plugin that is not required for immediate use.
  *
- * @author Justin Greer  <justin@justin-greer.com>
+ * @author Justin Greer  <justingreer750@gmail.com>
  */
 
 /**
@@ -293,7 +293,7 @@ function wpoauth_method_me( $token = null ) {
 	unset( $me_data['user_url'] );
 
 	/**
-	 * 10.30.17 by Justin Greer <justin@dash10.digital>
+	 * 10.30.17 by Justin Greer <justingreer750@gmail.com>
 	 *
 	 * If openid is presented in the scope, we need to provide some more redundant information in a different variable.
 	 */

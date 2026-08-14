@@ -3,7 +3,7 @@
  * WordPress OAuth Server Main Class
  * Responsible for being the main handler
  *
- * @author  Justin Greer <justin@justin-greer.com>
+ * @author  Justin Greer <justingreer750@gmail.com>
  * @package WordPress OAuth Server
  */
 

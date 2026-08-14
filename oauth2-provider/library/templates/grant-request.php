@@ -4,7 +4,7 @@
  *
  * This template is used when asking if the user would like to grant access to the client.
  *
- * @author    Justin Greer <justin@justin-greer.com
+ * @author    Justin Greer <justingreer750@gmail.com
  * @copyright Justin Greer Interactive, LLC
  *
  * @package WP-Nightly

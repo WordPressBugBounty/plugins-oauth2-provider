@@ -25,7 +25,8 @@ foreach ( $ajax_events as $ajax_event => $nopriv ) {
  */
 function wo_ajax_remove_self_generated_token() {
 	
-	if ( ! wp_verify_nonce( $_POST['nonce'] ) ) {
+	$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+	if ( ! wp_verify_nonce( $nonce, 'wo_remove_self_generated_token' ) ) {
 		exit;
 	}
 	

@@ -2,7 +2,7 @@
 /**
  * Addes the Ability for User Generated Access Tokens
  * @updated 4.3.0
- * @author Justin Greer <justin@dash10.digital>
+ * @author Justin Greer <justingreer750@gmail.com>
  */
 
 add_action( 'show_user_profile', 'wp_oauth_profile_oauth_info' );
@@ -27,7 +27,7 @@ function wp_oauth_profile_oauth_info( $user ) {
             <p class="submit">
                 <input type="submit" name="generate_token" id="submit" class="button" value="Generate Token">
                 <input type="hidden" name="generate_token_nonce"
-                       value="< ?php print wp_create_nonce( 'generate_token' ); ?>" />
+                       value="<?php print wp_create_nonce( 'generate_token' ); ?>" />
             </p>
         </tr>
     </table>
@@ -41,8 +41,8 @@ function wp_oauth_profile_oauth_info( $user ) {
                 <input type="submit" name="generate_token" id="regenerate" class="button button-secondary"
                        value="Regenerate Token">
                 <input type="hidden" name="generate_token_nonce"
-                       value="< ?php print wp_create_nonce( 'generate_token' ); ?>" />
-                | <a href="#" id="revoke-token" data-nonce="<?php print wp_create_nonce(); ?>">Revoke Token</a>
+                       value="<?php print wp_create_nonce( 'generate_token' ); ?>" />
+                | <a href="#" id="revoke-token" data-nonce="<?php print wp_create_nonce( 'wo_remove_self_generated_token' ); ?>">Revoke Token</a>
             </td>
         </tr>
     </table>

@@ -2,7 +2,7 @@
 /**
  * support.php
  *
- * @author    Justin Greer <justin@justin-greer.com
+ * @author    Justin Greer <justingreer750@gmail.com
  * @copyright Justin Greer Interactive, LLC
  * @date      5/8/17
  * @package   WP-Nightly

@@ -2,7 +2,7 @@
 /*
  * general.php
  *
- * @author Justin Greer <justin@justin-greer.com
+ * @author Justin Greer <justingreer750@gmail.com
  * @copyright Justin Greer Interactive, LLC
  *
  * @package WP-Nightly
@@ -119,14 +119,19 @@ $options = get_option( 'wo_license_information' );
     <tr>
         <th>PHP cURL</th>
         <td>
-            <?php foreach ( curl_version() as $key => $value ) : ?>
             <?php
-				if ( $key == 'protocols' ) {
-					continue;
+			$curl_version = function_exists( 'curl_version' ) ? curl_version() : false;
+			if ( ! is_array( $curl_version ) ) {
+				echo 'cURL not available';
+			} else {
+				foreach ( $curl_version as $key => $value ) {
+					if ( ! is_scalar( $value ) ) {
+						continue;
+					}
+					echo esc_html( $key ) . ' : ' . esc_html( (string) $value ) . '<br/>';
 				}
-				print $key . ' : ' . $value . '<br/>';
-				?>
-            <?php endforeach; ?>
+			}
+			?>
         </td>
     </tr>
 

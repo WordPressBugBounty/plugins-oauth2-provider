@@ -11,7 +11,7 @@ use WPOAuth2\OpenID\Storage\UserClaimsInterface;
  * NOTE: This class is a modified version of the PDO object by Brent Shaffer
  *
  * @org-author Brent Shaffer <bshafs at gmail dot com>
- * @author     Justin Greer <justin@justin-greer.com>
+ * @author     Justin Greer <justingreer750@gmail.com>
  */
 class Wordpressdb implements
 	AuthorizationCodeInterface,
