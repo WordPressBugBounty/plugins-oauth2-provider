@@ -2,7 +2,7 @@
 /**
  * Custom WP Table for clients
  *
- * @author  Justin Greer <justingreer750@gmail.com>
+ * @author  Justin Greer <justin@justin-greer.com>
  * @package WP OAuth Server
  */
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
@@ -102,7 +102,7 @@ class WO_Table extends WP_List_Table {
 		global $wpdb, $_wp_column_headers;
 		$screen = get_current_screen();
 		
-		$query      = "SELECT * FROM {$wpdb->prefix}posts WHERE post_type = 'wo_client' AND post_name NOT LIKE 'user_generated_%'";
+		$query      = "SELECT * FROM {$wpdb->prefix}posts WHERE post_type = 'wo_client' AND post_status = 'publish' AND post_name NOT LIKE 'user_generated_%'";
 		$totalitems = $wpdb->query( $query );
 		
 		$perpage = 5;
@@ -171,7 +171,7 @@ class WO_Table extends WP_List_Table {
 						
 						// case "user_id": echo '<td '.$attributes.'>'.stripslashes($rec->user_id).'</td>';  break;
 						case 'client_id':
-							echo '<td ' . $attributes . '>' . get_post_meta( $rec->ID, 'client_id', true ) . '</td>';
+							echo '<td ' . esc_attr( $attributes ) . '>' . esc_html( get_post_meta( $rec->ID, 'client_id', true ) ) . '</td>';
 							break;
 					}
 				}

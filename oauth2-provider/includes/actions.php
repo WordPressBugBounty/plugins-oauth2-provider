@@ -2,7 +2,7 @@
 /**
  * WP OAuth Server Actions
  *
- * @author  Justin Greer <justingreer750@gmail.com>
+ * @author  Justin Greer <justin@justin-greer.com>
  * @package WordPress OAuth Server
  */
 

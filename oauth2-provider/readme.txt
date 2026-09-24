@@ -1,11 +1,12 @@
 === WP OAuth Server (OAuth Authentication) ===
 
 Contributors: justingreerbbi, askjayson
+Donate link: http://justin-greer.com/ 
 Tags: OAuth2 Service, oauth2, OAuth provider, Provider, OAuth, OAuth client, Single Sign On, SSO, OpenID Connect, OIDC, OpenID, Connect
 Requires at least: 4.7.2
-Tested up to: 7.0.4
+Tested up to: 6.9.0
 Requires PHP: 7.4
-Stable tag: 4.5.1
+Stable tag: 4.5.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -61,7 +62,7 @@ https://wp-oauth.com.
 
 = Minimum Requirements =
 
-* PHP 7.4 or greater *(latest version recommended)*
+* PHP 5.6.4 or greater *(latest version recommended)*
 * OpenSSL installed and enabled if you plan on using OpenID Connect
 
 = Other Information =
@@ -113,11 +114,15 @@ For any upgrade or modification, PLEASE PLEASE PLEASE make a full backup of your
 
 == Changelog ==
 
+= 4.5.2 =
+* Security Update: Fixed a Contributor-to-Administrator stored XSS via unescaped `client_id` meta on the OAuth clients admin table. Updating is highly recommended.
+* Hardened `wo_client` post type capabilities so only administrators can create or edit OAuth clients through core APIs (including XML-RPC).
+* Protected OAuth client post meta (`client_id`, `client_secret`, `redirect_uri`, `grant_types`, `user_id`, `scope`) from unauthorized custom-fields writes.
+* Hardened user-generated profile token clients so they remain available to logged-in users without allowing arbitrary client meta.
+
 = 4.5.1 =
 * Security Update: Scoped the revoke-token AJAX nonce to a named action so a generic default-action nonce cannot be reused. Updating is recommended.
 * Fixed Generate/Regenerate Token nonce fields on the user profile so those actions submit a valid nonce.
-* Fixed a PHP warning on the Server Status page caused by cURL returning array values such as feature_list.
-* Tested with WordPress 7.0.4.
 
 = 4.5.0 =
 * Security Update: A patch has been added to protect the private key during certain server configurations. Updating is highly recommended.

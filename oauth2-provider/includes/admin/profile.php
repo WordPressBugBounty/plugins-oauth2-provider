@@ -2,7 +2,7 @@
 /**
  * Addes the Ability for User Generated Access Tokens
  * @updated 4.3.0
- * @author Justin Greer <justingreer750@gmail.com>
+ * @author Justin Greer <justin@dash10.digital>
  */
 
 add_action( 'show_user_profile', 'wp_oauth_profile_oauth_info' );
@@ -27,7 +27,7 @@ function wp_oauth_profile_oauth_info( $user ) {
             <p class="submit">
                 <input type="submit" name="generate_token" id="submit" class="button" value="Generate Token">
                 <input type="hidden" name="generate_token_nonce"
-                       value="<?php print wp_create_nonce( 'generate_token' ); ?>" />
+                       value="<?php echo esc_attr( wp_create_nonce( 'generate_token' ) ); ?>" />
             </p>
         </tr>
     </table>
@@ -37,12 +37,12 @@ function wp_oauth_profile_oauth_info( $user ) {
         <tr>
             <th>Access Token</th>
             <td>
-                <?php print sanitize_text_field( $user_token->access_token ); ?> <br /> <br />
+                <?php echo esc_html( $user_token->access_token ); ?> <br /> <br />
                 <input type="submit" name="generate_token" id="regenerate" class="button button-secondary"
                        value="Regenerate Token">
                 <input type="hidden" name="generate_token_nonce"
-                       value="<?php print wp_create_nonce( 'generate_token' ); ?>" />
-                | <a href="#" id="revoke-token" data-nonce="<?php print wp_create_nonce( 'wo_remove_self_generated_token' ); ?>">Revoke Token</a>
+                       value="<?php echo esc_attr( wp_create_nonce( 'generate_token' ) ); ?>" />
+                | <a href="#" id="revoke-token" data-nonce="<?php echo esc_attr( wp_create_nonce( 'wo_remove_self_generated_token' ) ); ?>">Revoke Token</a>
             </td>
         </tr>
     </table>
@@ -58,6 +58,10 @@ function wo_user_profile_update_token_gen( $errors, $update, $user ) {
 	if ( ! empty( $_POST['generate_token'] ) && is_user_logged_in() && wp_verify_nonce( $_POST['generate_token_nonce'], 'generate_token' ) ) {
 
 		$client_id = wo_ap_create_user_generated_client_id();
+		if ( empty( $client_id ) ) {
+			return;
+		}
+
 		$access_token = wp_ap_generate_access_token();
 
 		/*
@@ -86,10 +90,17 @@ function wo_user_profile_update_token_gen( $errors, $update, $user ) {
 function wo_ap_token_gen_set_access_token( $access_token, $client_id, $user_id, $expires, $scope = null ) {
 	global $wpdb;
 
+	$user_id = absint( $user_id );
+
 	/*
 	 * Delete old token(s) to limit security issues
 	 */
-	$wpdb->query( "DELETE FROM {$wpdb->prefix}oauth_access_tokens WHERE user_id = {$user_id} AND ap_generated = 1" );
+	$wpdb->query(
+		$wpdb->prepare(
+			"DELETE FROM {$wpdb->prefix}oauth_access_tokens WHERE user_id = %d AND ap_generated = 1",
+			$user_id
+		)
+	);
 
 	/*
 	 * Insert the new token info
@@ -106,45 +117,66 @@ function wo_ap_token_gen_set_access_token( $access_token, $client_id, $user_id, 
 		)
 	);
 
-	// exit($insert);
-
 	// Return Results
 	return $insert;
 }
 
-
+/**
+ * Create or reuse the current user's internal user-generated OAuth client.
+ *
+ * Uses wp_insert_post() intentionally so any logged-in user can create their own
+ * user_generated_{uid} client even though wo_client CPT caps require manage_options.
+ * Meta values are plugin-controlled only — never taken from request input.
+ *
+ * @return string|false Client ID, or false on failure.
+ */
 function wo_ap_create_user_generated_client_id() {
-	// Check to see if there is a client already. If so, skip creating one
-	$client = get_page_by_title( 'user_generated_' . get_current_user_id(), OBJECT, 'wo_client' );
-	if ( is_null( $client ) ) {
+	if ( ! is_user_logged_in() ) {
+		return false;
+	}
 
-		$client_id = wo_gen_key();
-		$client_secret = wo_gen_key();
+	$user_id     = get_current_user_id();
+	$client_title = 'user_generated_' . $user_id;
 
-		$client = array(
-			'post_title' => wp_strip_all_tags( 'user_generated_' . get_current_user_id() ),
-			'post_content' => ' ',
-			'post_status' => 'publish',
-			'post_author' => get_current_user_id(),
-			'post_type' => 'wo_client',
-			'comment_status' => 'closed',
-			'meta_input' => array(
-				'client_id' => $client_id,
-				'client_secret' => $client_secret,
-				'grant_types' => array( 'authorization_code' ),
-				'redirect_uri' => '',
-				'user_id' => get_current_user_id(),
-				'scope' => 'basic',
-			),
+	$existing = get_posts(
+		array(
+			'post_type'              => 'wo_client',
+			'post_status'            => 'any',
+			'title'                  => $client_title,
+			'posts_per_page'         => 1,
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => true,
+			'update_post_term_cache' => false,
+		)
+	);
 
-		);
-		wp_insert_post( $client );
+	if ( ! empty( $existing ) ) {
+		return get_post_meta( $existing[0]->ID, 'client_id', true );
+	}
 
-	} else {
+	$client_id     = wo_gen_key();
+	$client_secret = wo_gen_key();
 
-		// Use the client id that already exists
-		$client_id = get_post_meta( $client->ID, 'client_id', true );
+	$client_post = array(
+		'post_title'     => $client_title,
+		'post_content'   => ' ',
+		'post_status'    => 'publish',
+		'post_author'    => $user_id,
+		'post_type'      => 'wo_client',
+		'comment_status' => 'closed',
+		'meta_input'     => array(
+			'client_id'     => $client_id,
+			'client_secret' => $client_secret,
+			'grant_types'   => array( 'authorization_code' ),
+			'redirect_uri'  => '',
+			'user_id'       => $user_id,
+			'scope'         => 'basic',
+		),
+	);
 
+	$inserted = wp_insert_post( $client_post, true );
+	if ( is_wp_error( $inserted ) || ! $inserted ) {
+		return false;
 	}
 
 	return $client_id;

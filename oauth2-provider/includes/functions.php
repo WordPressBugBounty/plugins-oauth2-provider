@@ -49,7 +49,8 @@ function wo_types() {
 		'show_in_menu' => false,
 		'query_var' => true,
 		'rewrite' => array( 'slug' => 'wo_client' ),
-		'capability_type' => 'post',
+		'capability_type' => 'wo_client',
+		'map_meta_cap' => true,
 		'has_archive' => true,
 		'hierarchical' => false,
 		'menu_position' => null,
@@ -59,6 +60,41 @@ function wo_types() {
 
 	register_post_type( 'wo_client', $args );
 }
+
+/**
+ * Grant wo_client capabilities to administrators only.
+ *
+ * Uses dedicated caps (not manage_options) so meta-capability mapping does not
+ * break core manage_options checks via $post_type_meta_caps.
+ */
+function wo_add_client_caps_to_admin() {
+	$role = get_role( 'administrator' );
+	if ( ! $role ) {
+		return;
+	}
+
+	$caps = array(
+		'edit_wo_client',
+		'read_wo_client',
+		'delete_wo_client',
+		'edit_wo_clients',
+		'edit_others_wo_clients',
+		'publish_wo_clients',
+		'read_private_wo_clients',
+		'delete_wo_clients',
+		'delete_private_wo_clients',
+		'delete_published_wo_clients',
+		'delete_others_wo_clients',
+		'edit_private_wo_clients',
+		'edit_published_wo_clients',
+	);
+
+	foreach ( $caps as $cap ) {
+		$role->add_cap( $cap );
+	}
+}
+
+add_action( 'init', 'wo_add_client_caps_to_admin', 11 );
 
 /**
  * [wo_create_client description]

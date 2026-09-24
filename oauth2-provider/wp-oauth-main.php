@@ -3,7 +3,7 @@
  * WordPress OAuth Server Main Class
  * Responsible for being the main handler
  *
- * @author  Justin Greer <justingreer750@gmail.com>
+ * @author  Justin Greer <justin@justin-greer.com>
  * @package WordPress OAuth Server
  */
 
@@ -63,7 +63,7 @@ class WO_Server {
 		}
 
 		if ( ! defined( 'WOCHECKSUM' ) ) {
-			define( 'WOCHECKSUM', 'BF69D33B303BB0BC3B9336641AA629C9' );
+			define( 'WOCHECKSUM', '9F908BFCF16B00C6487FA9F509DA2B6B' );
 		}
 
 		if ( ! defined( 'wp_oauth_server_db_version' ) ) {

@@ -2,7 +2,7 @@
 /**
  * WP OAuth Server Cron Jobs
  *
- * @author  Justin Greer <justingreer750@gmail.com>
+ * @author  Justin Greer <justin@dash10.digital>
  * @package WP OAuth Server
  */
 

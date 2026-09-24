@@ -4,7 +4,7 @@
  *
  * This file should contain all the filters used throughout the plugin that is not required for immediate use.
  *
- * @author Justin Greer  <justingreer750@gmail.com>
+ * @author Justin Greer  <justin@justin-greer.com>
  */
 
 /**
@@ -293,7 +293,7 @@ function wpoauth_method_me( $token = null ) {
 	unset( $me_data['user_url'] );
 
 	/**
-	 * 10.30.17 by Justin Greer <justingreer750@gmail.com>
+	 * 10.30.17 by Justin Greer <justin@dash10.digital>
 	 *
 	 * If openid is presented in the scope, we need to provide some more redundant information in a different variable.
 	 */
@@ -341,3 +341,108 @@ function wpoauth_server_register_routes( $response_object ) {
 }
 
 add_filter( 'rest_index', 'wpoauth_server_register_routes' );
+
+/**
+ * OAuth client meta keys that must not be writable via custom fields / XML-RPC / REST.
+ *
+ * @return string[]
+ */
+function wo_client_protected_meta_keys() {
+	return array(
+		'client_id',
+		'client_secret',
+		'redirect_uri',
+		'grant_types',
+		'user_id',
+		'scope',
+	);
+}
+
+/**
+ * Whether the current user may manage OAuth client meta.
+ *
+ * @return bool
+ */
+function wo_client_meta_auth_callback() {
+	return current_user_can( 'manage_options' );
+}
+
+/**
+ * Sanitize grant_types meta to an array of safe strings.
+ *
+ * @param mixed $value Meta value.
+ * @return array
+ */
+function wo_sanitize_grant_types_meta( $value ) {
+	if ( ! is_array( $value ) ) {
+		$value = array( $value );
+	}
+
+	return array_values( array_filter( array_map( 'sanitize_text_field', $value ) ) );
+}
+
+/**
+ * Register and lock down wo_client post meta.
+ */
+function wo_register_client_meta() {
+	$auth = 'wo_client_meta_auth_callback';
+
+	$string_keys = array( 'client_id', 'client_secret', 'redirect_uri', 'scope' );
+	foreach ( $string_keys as $meta_key ) {
+		register_post_meta(
+			'wo_client',
+			$meta_key,
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => false,
+				'auth_callback'     => $auth,
+				'sanitize_callback' => 'sanitize_text_field',
+			)
+		);
+	}
+
+	register_post_meta(
+		'wo_client',
+		'user_id',
+		array(
+			'type'              => 'integer',
+			'single'            => true,
+			'show_in_rest'      => false,
+			'auth_callback'     => $auth,
+			'sanitize_callback' => 'absint',
+		)
+	);
+
+	register_post_meta(
+		'wo_client',
+		'grant_types',
+		array(
+			'type'              => 'array',
+			'single'            => true,
+			'show_in_rest'      => false,
+			'auth_callback'     => $auth,
+			'sanitize_callback' => 'wo_sanitize_grant_types_meta',
+		)
+	);
+}
+
+add_action( 'init', 'wo_register_client_meta', 11 );
+
+/**
+ * Treat OAuth client meta as protected so custom-fields / XML-RPC cannot write it freely.
+ *
+ * @param bool   $protected Whether the meta is protected.
+ * @param string $meta_key  Meta key.
+ * @param string $meta_type Meta type.
+ * @return bool
+ */
+function wo_protect_client_meta( $protected, $meta_key, $meta_type ) {
+	if ( 'post' === $meta_type && in_array( $meta_key, wo_client_protected_meta_keys(), true ) ) {
+		return true;
+	}
+
+	return $protected;
+}
+
+add_filter( 'is_protected_meta', 'wo_protect_client_meta', 10, 3 );
